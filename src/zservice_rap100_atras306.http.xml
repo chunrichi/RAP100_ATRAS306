@@ -1,0 +1,22 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<abapGit version="v1.0.0" serializer="LCL_OBJECT_HTTP" serializer_version="v1.0.0">
+ <asx:abap xmlns:asx="http://www.sap.com/abapxml" version="1.0">
+  <asx:values>
+   <HTTPID>ZSERVICE_RAP100_ATRAS306</HTTPID>
+   <HTTPTEXT>
+    <ID>ZSERVICE_RAP100_ATRAS306</ID>
+    <VERSION>A</VERSION>
+    <LANG>1</LANG>
+    <SHORTTEXT>HTTP SERVICE TEST</SHORTTEXT>
+   </HTTPTEXT>
+   <HTTPHDL>
+    <UCONSERVHANDLER>
+     <ID>ZSERVICE_RAP100_ATRAS306</ID>
+     <VERSION>A</VERSION>
+     <SERVICEORDER>01</SERVICEORDER>
+     <SERVICEHANDLER>ZCL_RAP100_SERVICE_ATRAS306</SERVICEHANDLER>
+    </UCONSERVHANDLER>
+   </HTTPHDL>
+  </asx:values>
+ </asx:abap>
+</abapGit>
