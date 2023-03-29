@@ -1,0 +1,91 @@
+managed implementation in class ZRAP100_BP_ATRAS306 unique;
+strict ( 2 );
+with draft;
+
+define behavior for ZRAP100_R_ATRAS306 alias ATRAS306
+persistent table zrap100_atras306
+draft table zrap100_dtras306
+etag master LastChangedAt
+lock master total etag LocalLastChangedAt
+authorization master ( global )
+early numbering
+{
+  //field ( mandatory : create )
+  //TravelID;
+
+  field ( readonly )
+  CreatedAt,
+  CreatedBy,
+  LocalLastChangedAt,
+  LastChangedAt,
+  LastChangedBy;
+
+  field ( readonly : update )
+  TravelID;
+
+  // 强制字段
+  field ( mandatory )
+  CustomerID,
+  BeginDate,
+  EndDate;
+
+
+  create;
+  update ( features : instance ); //update;
+  delete ( features : instance ); //delete;
+
+  // 发生更改时（创建）
+  determination setStatusToOpen on modify { create; }
+
+  validation validationCustomer on save { create; field CustomerID; }
+  validation validationDates on save { create; field BeginDate, EndDate; }
+
+  // 定义一个操作：预定费中扣除一定的百分比
+  //action deductDiscount result [1] $self;
+  //action deductDiscount parameter /DMO/A_Travel_Discount result [1] $self;
+  action ( features : instance ) deductDiscount parameter /DMO/A_Travel_Discount result [1] $self;
+
+  // 工厂操作: 复制已有数据
+  factory action copyTravel [1];
+
+  //action acceptTravel result [1] $self;
+  //action rejectTravel result [1] $self;
+  action ( features : instance ) acceptTravel result [1] $self;
+  action ( features : instance ) rejectTravel result [1] $self;
+
+  // 草稿操作
+  //draft action Edit;
+  draft action ( features : instance ) Edit;
+  draft action Activate;
+  draft action Discard;
+  draft action Resume;
+  draft determine action Prepare
+  {
+    validation validationCustomer;
+    validation validationDates;
+  }
+  mapping for zrap100_atras306
+    {
+      TravelID           = travel_id;
+      AgencyID           = agency_id;
+      CustomerID         = customer_id;
+      BeginDate          = begin_date;
+      EndDate            = end_date;
+      BookingFee         = booking_fee;
+      TotalPrice         = total_price;
+      CurrencyCode       = currency_code;
+      Description        = description;
+      OverallStatus      = overall_status;
+      Attachment         = attachment;
+      MimeType           = mime_type;
+      FileName           = file_name;
+      CreatedBy          = created_by;
+      CreatedAt          = created_at;
+      LastChangedBy      = last_changed_by;
+      LastChangedAt      = last_changed_at;
+      LocalLastChangedAt = local_last_changed_at;
+    }
+
+
+
+}

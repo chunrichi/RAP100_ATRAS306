@@ -1,0 +1,4 @@
+@EndUserText.label: 'Service definition forZRAP100_C_ATRAS306'
+define service ZRAP100_UI_ATRAS306 {
+  expose ZRAP100_C_ATRAS306 as ATRAS306;
+}
