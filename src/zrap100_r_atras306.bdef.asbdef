@@ -45,6 +45,9 @@ early numbering
   //action deductDiscount parameter /DMO/A_Travel_Discount result [1] $self;
   action ( features : instance ) deductDiscount parameter /DMO/A_Travel_Discount result [1] $self;
 
+  // 通过 API 获取折扣比例
+  action deuctDiscApi result [1] $self;
+
   // 工厂操作: 复制已有数据
   factory action copyTravel [1];
 

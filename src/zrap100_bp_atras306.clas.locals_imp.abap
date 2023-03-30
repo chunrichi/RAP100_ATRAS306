@@ -25,6 +25,8 @@ CLASS lhc_atras306 DEFINITION INHERITING FROM cl_abap_behavior_handler.
       IMPORTING keys FOR ACTION atras306~rejectTravel RESULT result.
     METHODS get_instance_features FOR INSTANCE FEATURES
       IMPORTING keys REQUEST requested_features FOR atras306 RESULT result.
+    METHODS deuctdiscapi FOR MODIFY
+      IMPORTING keys FOR ACTION atras306~deuctdiscapi RESULT result.
 ENDCLASS.
 
 CLASS lhc_atras306 IMPLEMENTATION.
@@ -452,6 +454,101 @@ CLASS lhc_atras306 IMPLEMENTATION.
                                                           THEN if_abap_behv=>fc-o-enabled ELSE if_abap_behv=>fc-o-disabled   )
                      ) ).
 
+  ENDMETHOD.
+
+  METHOD deuctDiscApi.
+    " 通过 API 获取数据
+    DATA: http_client TYPE REF TO if_web_http_client,
+          lo_response TYPE REF TO if_web_http_response,
+          iv_url      TYPE string.
+
+    DATA travels_for_update TYPE TABLE FOR UPDATE zrap100_r_atras306.
+    DATA(keys_with_valid_discount) = keys.
+
+    " 读取相关的旅行实例数据（仅指预订费）
+    READ ENTITIES OF zrap100_r_atras306 IN LOCAL MODE
+        ENTITY atras306
+        FIELDS ( BookingFee )
+        WITH CORRESPONDING #( keys_with_valid_discount )
+        RESULT DATA(travels).
+
+    " 使用 https://randommer.io/Number 获取 1 ~ 100 的随机数
+    iv_url = `https://randommer.io/Number`.
+
+    " form 参数设置
+    iv_url &&= '?'
+           && 'range=range' && '&'
+           && 'LowerRange=1' && '&'
+           && 'HigherRange=100' && '&'
+           && 'X-Requested-With=XMLHttpRequest'.
+
+    TRY.
+        " 通过 URL 启用通信
+        DATA(lo_url_destination) = cl_http_destination_provider=>create_by_url(
+            iv_url ).
+
+        " 获取 请求的 client
+        http_client = cl_web_http_client_manager=>create_by_http_destination( lo_url_destination ).
+
+        lo_response = http_client->execute( if_web_http_client=>post ).
+
+        DATA(lv_random_value) = lo_response->get_text( ).
+
+      CATCH cx_web_http_client_error cx_http_dest_provider_error INTO DATA(lr_http_cx).
+
+        LOOP AT travels ASSIGNING FIELD-SYMBOL(<travel>).
+          APPEND VALUE #( %tky = <travel>-%tky ) TO failed-atras306.
+          APPEND VALUE #( %tky = <travel>-%tky
+                          %msg = new_message( id        = 'ZRAP100_S306'
+                                              number    = '001'
+                                              v1        = lr_http_cx->get_text( )
+                                              severity  = if_abap_behv_message=>severity-error )  ) TO reported-atras306.
+        ENDLOOP.
+        RETURN.
+    ENDTRY.
+
+    " 转换数字
+    DATA: lv_percent TYPE i.
+
+    TRY.
+        lv_percent = lv_random_value.
+      CATCH cx_root.
+        LOOP AT travels ASSIGNING <travel>.
+          APPEND VALUE #( %tky = <travel>-%tky ) TO failed-atras306.
+          APPEND VALUE #( %tky = <travel>-%tky
+                          %msg = new_message( id        = 'ZRAP100_S306'
+                                              number    = '002'
+                                              v1        = lv_random_value
+                                              severity  = if_abap_behv_message=>severity-error )  ) TO reported-atras306.
+        ENDLOOP.
+        RETURN.
+    ENDTRY.
+
+    " 折扣 lv_percent%
+    LOOP AT travels ASSIGNING <travel>.
+      DATA(reduced_fee) = <travel>-BookingFee * ( 100 - lv_percent / 100 ) .
+
+      APPEND VALUE #( %tky       = <travel>-%tky
+                    BookingFee = reduced_fee
+                  ) TO travels_for_update.
+    ENDLOOP.
+
+    " 更新数据
+    MODIFY ENTITIES OF zrap100_r_atras306 IN LOCAL MODE
+        ENTITY atras306
+        UPDATE FIELDS ( BookingFee )
+        WITH travels_for_update.
+
+    " 从结果中读取数据
+    READ ENTITIES OF zrap100_r_atras306 IN LOCAL MODE
+        ENTITY atras306
+        ALL FIELDS WITH
+        CORRESPONDING #( travels )
+        RESULT DATA(travels_with_discount).
+
+    " set action result
+    result = VALUE #( FOR travel IN travels_with_discount ( %tky   = travel-%tky
+                                                              %param = travel ) ).
   ENDMETHOD.
 
 ENDCLASS.

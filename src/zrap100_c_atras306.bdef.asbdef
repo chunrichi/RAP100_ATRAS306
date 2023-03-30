@@ -20,4 +20,6 @@ use etag
   use action acceptTravel;
   use action rejectTravel;
 
+  use action deuctDiscApi;
+
 }

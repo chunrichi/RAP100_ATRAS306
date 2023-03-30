@@ -121,6 +121,7 @@ annotate view ZRAP100_C_ATRAS306 with
                    ,{ type: #FOR_ACTION, dataAction: 'deductDiscount', label: 'Deduct Discount' }
                    ,{ type: #FOR_ACTION, dataAction: 'acceptTravel', label: 'Accept Travel' }
                    ,{ type: #FOR_ACTION, dataAction: 'rejectTravel', label: 'Reject Travel' }
+                   ,{ type: #FOR_ACTION, dataAction: 'deuctDiscApi', label: 'Deduct From API' }
        ],
    textArrangement: #TEXT_ONLY
   }
